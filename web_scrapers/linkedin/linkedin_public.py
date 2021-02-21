@@ -12,6 +12,8 @@ class LinkedinPublic(SourceClient):
     login_required = False
     concurrency = 3
     sec_per_page = 1.0
+    job_detail_cols = ['uid', 'seniority', 'employment_type', 'job_function', 'industries']
+    job_summary_cols = ['uid', 'job_title', 'company', 'location', 'posting_date', 'search_date']
 
     def __init__(self):
         super().__init__()
@@ -31,14 +33,13 @@ class LinkedinPublic(SourceClient):
 
     def get_detailed_data(self, uid):
         self.view_job_posting(uid)
-        cols = ['uid', 'seniority', 'employment_type', 'job_function', 'industries']
         data = [el.text for el in
                 self.driver.find_elements(By.XPATH, "//li[starts-with(@class, 'job-criteria')]")]
         seniority = data[0][(data[0].find('\n') + 1):]
         emp_type = data[1][(data[1].find('\n') + 1):]
         func = data[2][(data[2].find('\n') + 1):]
         industry = data[3][(data[3].find('\n') + 1):]
-        df = pd.DataFrame([[uid, seniority, emp_type, func, industry]], columns=cols)
+        df = pd.DataFrame([[uid, seniority, emp_type, func, industry]], columns=self.job_detail_cols)
         return df
 
     def quit_client(self):
@@ -63,9 +64,7 @@ class LinkedinPublic(SourceClient):
 
     def get_summary_data(self, keyword, location):
         self.job_search(keyword, location)
-        cols = ['uid', 'job_title', 'company', 'location', 'posting_date', 'search_date']
-        df = pd.DataFrame(columns=cols)
-        # time.sleep(2.0)
+        df = pd.DataFrame(columns=self.job_summary_cols)
         job_list = self.driver.find_elements(By.XPATH, "//ul[starts-with(@class, 'jobs-search')]/li[@data-id]")
         extra = 0
         cnt = len(job_list)
@@ -88,7 +87,7 @@ class LinkedinPublic(SourceClient):
             except exceptions.NoSuchElementException:
                 date = None
             data = [uid, title, company, loc, date, str(datetime.today().date())]
-            df = df.append(pd.DataFrame([data], columns=cols))
+            df = df.append(pd.DataFrame([data], columns=self.job_summary_cols))
         return df
 
     @staticmethod
