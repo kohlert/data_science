@@ -1,6 +1,6 @@
 from unittest import TestCase
-from ...linkedin import LinkedinLogin
-from ...linkedin import LinkedinPublic
+from ..linkedin_public import LinkedinPublic
+from ..linkedin_login import LinkedinLogin
 import pandas as pd
 import os
 import json

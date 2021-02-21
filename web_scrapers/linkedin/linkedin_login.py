@@ -1,4 +1,4 @@
-from linkedin_public import LinkedinPublic
+from .linkedin_public import LinkedinPublic
 from selenium import webdriver  # https://www.selenium.dev/selenium/docs/api/py/api.html
 from selenium.common import exceptions
 from selenium.webdriver.common.by import By
@@ -8,7 +8,7 @@ import pandas as pd
 import os
 import json
 import time
-from pkg_resources import resource_filename
+from .local_drivers import chrome_88_path
 
 
 class LinkedinLogin(LinkedinPublic):

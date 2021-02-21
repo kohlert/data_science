@@ -5,7 +5,7 @@ from selenium.webdriver.common.by import By
 from datetime import datetime
 import pandas as pd
 import time
-from pkg_resources import resource_filename
+from .local_drivers import chrome_88_path
 
 
 class LinkedinPublic(SourceClient):
@@ -18,7 +18,7 @@ class LinkedinPublic(SourceClient):
         self.path = 'https://www.linkedin.com/'
         self.driver = None
         # chromedriver.exe is needed.  Current package supports chrome version 88.
-        self.chrome_driver_path = resource_filename(__name__, '/web_drivers/chromedriver88.exe')
+        self.chrome_driver_path = chrome_88_path
 
     def load_client(self, name=None, pwd=None):
         try:
