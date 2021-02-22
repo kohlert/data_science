@@ -11,7 +11,7 @@ class TestSourceClient(TestCase):
     location = 'Bakersfield'
     # source_client = LinkedinPublic
     source_client = LinkedinLogin
-    uid = '2417292529'
+    uid = '2403641965'
     login_required = source_client.login_required
     name, pwd = None, None
     if login_required:
@@ -37,33 +37,6 @@ class TestSourceClient(TestCase):
 
     def test_get_detailed_data(self):
         page = self.source_client()
-        page.load_client()
+        page.load_client(name=self.name, pwd=self.pwd)
         data = page.get_detailed_data(self.uid)
         assert isinstance(data, pd.DataFrame)
-
-# class Testlinkedin(TestCase):
-#     with open(os.environ['cred'] + 'linkedin.json', 'r') as doc:
-#         uid, pwd = json.load(doc)['linkedin'].values()
-#     keyword = 'data science'
-#     location = 'United States'
-#
-#     def test_login_linkedin(self):
-#         page = Linkedin(self.uid, self.pwd, login=True)
-#         assert page.driver.session_id
-#
-#     def test_job_search(self):
-#         page = Linkedin(self.uid, self.pwd, login=True)
-#         page.job_search(self.keyword, self.location)
-#         assert True
-#
-#     def test_jobs_summary(self):
-#         page = Linkedin(self.uid, self.pwd, login=True)
-#         page.job_search(self.keyword, self.location)
-#         df = page.jobs_summary()
-#         assert isinstance(df, pd.DataFrame)
-#
-#     def test_collect_all_summary_data(self):
-#         page = Linkedin(self.uid, self.pwd, login=True)
-#         df = page.collect_all_summary_data(self.keyword, self.location,
-#                                            save_path='.\\linkedin\\data\\data_science_USA.csv')
-#         assert isinstance(df, pd.DataFrame)

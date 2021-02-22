@@ -1,9 +1,11 @@
+from bs4 import BeautifulSoup
 from .linkedin_public import LinkedinPublic
 from selenium.common import exceptions
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from datetime import datetime
 import pandas as pd
+import pickle
 import time
 
 
@@ -81,6 +83,28 @@ class LinkedinLogin(LinkedinPublic):
             k += 25
         return df
 
+    def get_detailed_data(self, uid, directory='linkedin/data/'):
+        self.view_job_posting(uid)
+        ul_list = self.driver.find_element(By.XPATH, "//div[starts-with(@class, 'jobs-description-details')]")
+        article = self.driver.find_element(By.XPATH, "//div[starts-with(@class, 'jobs-box__html-content')]"). \
+            get_attribute('innerHTML')
+        soup = BeautifulSoup(ul_list.get_attribute('innerHTML'))
+        columns = ['uid'] + [div.h3.text.strip() for div in soup.find_all('div')] + ['salary_low', 'salary_high']
+        body = BeautifulSoup(article)
+        with open(directory + uid + '.pkl', 'wb+') as file:
+            pickle.dump(body, file)
+        salary_low, salary_high = None, None
+        try:
+            salary = self.driver.find_element(By.XPATH, "//div[starts-with(@class, 'mh5 mt4')]/p").text
+            if (('$' in salary) and ('yr' in salary)):
+                salary_low = self.parse_int(salary[:(salary.find(' '))])
+                salary_high = self.parse_int(salary[(salary.find(' ')):])
+        except exceptions.NoSuchElementException:
+            pass
+        data = [', '.join([str for str in h3.parent.stripped_strings][1:]) for h3 in soup.find_all('h3')]
+        df = pd.DataFrame([[uid] + data + [salary_low, salary_high]], columns=columns)
+        return df
+
     def _get_list_skeleton(self):
         """
         :return: a list of elements identified as likely placeholders for job data cards (potentially not yet populated)
@@ -114,6 +138,7 @@ class LinkedinLogin(LinkedinPublic):
         while len(self._get_list_populated()) != cnt:
             for i in range(0, cnt, 3):
                 job_slots[i].location_once_scrolled_into_view
+            time.sleep(self.sec_per_page)
         return cnt
 
     def search_filter(self, salary=100, distance=25):

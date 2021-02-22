@@ -1,9 +1,11 @@
+from bs4 import BeautifulSoup
 from web_scrapers import SourceClient
 from selenium import webdriver  # https://www.selenium.dev/selenium/docs/api/py/api.html
 from selenium.common import exceptions
 from selenium.webdriver.common.by import By
 from datetime import datetime
 import pandas as pd
+import pickle
 import time
 from .local_drivers import chrome_88_path
 
@@ -31,15 +33,18 @@ class LinkedinPublic(SourceClient):
         except exceptions.SessionNotCreatedException:
             self.driver.quit()
 
-    def get_detailed_data(self, uid):
+    def get_detailed_data(self, uid, directory='linkedin/data/'):
         self.view_job_posting(uid)
-        data = [el.text for el in
-                self.driver.find_elements(By.XPATH, "//li[starts-with(@class, 'job-criteria')]")]
-        seniority = data[0][(data[0].find('\n') + 1):]
-        emp_type = data[1][(data[1].find('\n') + 1):]
-        func = data[2][(data[2].find('\n') + 1):]
-        industry = data[3][(data[3].find('\n') + 1):]
-        df = pd.DataFrame([[uid, seniority, emp_type, func, industry]], columns=self.job_detail_cols)
+        ul_list = self.driver.find_element(By.XPATH, "//ul[starts-with(@class, 'job-criteria__list')]")
+        article = self.driver.find_element(By.XPATH, "//div[starts-with(@class, 'show-more-less-html')]"). \
+            get_attribute('innerHTML')
+        soup = BeautifulSoup(ul_list.get_attribute('innerHTML'))
+        columns = ['uid'] + [li.h3.text for li in soup.find_all('li')]
+        data = [', '.join([el.text for el in soup.contents[i].contents[1:]]) for i in range(len(soup.find_all('li')))]
+        df = pd.DataFrame([[uid] + data], columns=columns)
+        body = BeautifulSoup(article)
+        with open(directory + uid + '.pkl', 'wb+') as file:
+            pickle.dump(body, file)
         return df
 
     def quit_client(self):
@@ -74,6 +79,7 @@ class LinkedinPublic(SourceClient):
             for i in range(0, cnt - extra, 3):
                 job_list[i].location_once_scrolled_into_view  # scrolls through items to ensure all data is loaded
             cnt = len(self.driver.find_elements(By.XPATH, "//ul[starts-with(@class, 'jobs-search')]/li[@data-id]"))
+            time.sleep(self.sec_per_page)
         for i in range(0, cnt - extra):
             job = self.driver.find_elements(By.XPATH, "//ul[starts-with(@class, 'jobs-search')]/li[@data-id]")[i]
             uid = job.get_attribute('data-id')
