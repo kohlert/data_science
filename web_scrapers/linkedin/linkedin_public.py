@@ -59,6 +59,15 @@ class LinkedinPublic(SourceClient):
                f"{location.replace(' ', '%20').replace(',', '%2C')}&start={str(start)}"
         self.driver.get(path)
 
+    def oneline_summary(self, keyword, location):
+        """
+        :return: a dataframe with a one-line summary of search results
+        """
+        self.job_search(keyword, location)
+        number, text = self.search_summary()
+        return pd.DataFrame([[number, text, str(datetime.today().date())]],
+                            columns=['results', 'summary_text', 'search_date'])
+
     def search_summary(self):
         header = self.driver.find_element(By.CLASS_NAME, 'results-context-header__context')
         summary_count = header.find_element(By.CLASS_NAME, 'results-context-header__job-count').text
@@ -84,7 +93,10 @@ class LinkedinPublic(SourceClient):
             job = self.driver.find_elements(By.XPATH, "//ul[starts-with(@class, 'jobs-search')]/li[@data-id]")[i]
             uid = job.get_attribute('data-id')
             title = self.driver.find_element(By.XPATH, f"//li[starts-with(@data-id, '{uid}')]/div/h3").text
-            company = self.driver.find_element(By.XPATH, f"//li[starts-with(@data-id, '{uid}')]/div/h4/a").text
+            try:
+                company = self.driver.find_element(By.XPATH, f"//li[starts-with(@data-id, '{uid}')]/div/h4/a").text
+            except exceptions.NoSuchElementException:
+                company = None
             loc = self.driver.find_element(By.XPATH, f"//li[starts-with(@data-id, '{uid}')]/div/div/span").text
             try:
                 date = self.driver.find_element(By.XPATH,

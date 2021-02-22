@@ -40,3 +40,10 @@ class TestSourceClient(TestCase):
         page.load_client(name=self.name, pwd=self.pwd)
         data = page.get_detailed_data(self.uid)
         assert isinstance(data, pd.DataFrame)
+
+    def test_online_summary(self):
+        page = self.source_client()
+        page.load_client(name=self.name, pwd=self.pwd)
+        page.job_search(self.keyword, self.location)
+        df = page.oneline_summary()
+        assert isinstance(df, pd.DataFrame) and not df.empty
