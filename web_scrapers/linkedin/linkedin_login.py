@@ -12,7 +12,7 @@ import time
 class LinkedinLogin(LinkedinPublic):
     login_required = True
     concurrency = 1
-    sec_per_page = 2.0
+    sec_per_page = 1.5
     job_summary_cols = ['uid', 'job_title', 'company', 'location', 'posting_date', 'applicants', 'salary_low',
                         'salary_high', 'search_date']
 
@@ -30,6 +30,7 @@ class LinkedinLogin(LinkedinPublic):
         password.send_keys(pwd)
         time.sleep(self.sec_per_page)
         self.driver.find_element(By.CLASS_NAME, 'sign-in-form__submit-button').click()
+        self.security_check('Security checkpoint requires manual login.\nPress enter when complete...')
 
     def search_summary(self):
         header = self.driver.find_element(By.CLASS_NAME, 'jobs-search-results-list__title-heading')
@@ -40,30 +41,32 @@ class LinkedinLogin(LinkedinPublic):
 
     def jobs_summary(self):
         df = pd.DataFrame(columns=self.job_summary_cols)
-        cnt = self._populate_search_list()
+        self._populate_search_list()
+        psoup = BeautifulSoup(self.driver.find_element_by_xpath("//ul[starts-with(@class, 'jobs-search-results')]").
+                              get_attribute('innerHTML'))
+        cnt = len(psoup.find_all('li'))
         for i in range(0, cnt):
-            job = self._get_list_populated()[i]
-            uid = job.get_attribute('data-job-id')
-            posting = [entry.text for entry in job.find_elements(By.CSS_SELECTOR, 'a')]
-            add_data = [entry.text for entry in job.find_elements(By.CSS_SELECTOR, 'li')]
-            title = posting[1] if len(posting) >= 2 else None
-            company = posting[2] if len(posting) >= 3 else None
-            loc = add_data[0] if len(add_data) >= 1 else None
-            applicants = self.parse_int(add_data[-1]) if ('applicant' in add_data[-1]) else None
-            salary_low, salary_high = None, None
-            if len(add_data) >= 2:
-                if (('$' in add_data[1]) and ('K' in add_data[1])):
-                    salary_low = self.parse_int(add_data[1][:(add_data[1].find(' '))])
-                    salary_high = self.parse_int(add_data[1][(add_data[1].find(' ')):])
-            try:
-                date = self.driver.find_element(By.XPATH,
-                                                f"//div[starts-with(@data-job-id, '{uid}')]/ul/li/time").get_attribute(
-                    'datetime')
-            except:
-                date = None
-            data = [uid, title, company, loc, date, applicants, salary_low, salary_high,
-                    str(datetime.today().date())]
-            df = df.append(pd.DataFrame([data], columns=self.job_summary_cols))
+            soup = psoup.find_all('li')[i]
+            if soup.find_all('data-job-id'):
+                uid = soup.div.div.attrs['data-job-id']
+                posting = [el.text.strip() for el in soup.find_all('a')]
+                add_data = [el.text.strip() for el in soup.find_all('li')]
+                title = posting[1] if len(posting) >= 2 else None
+                company = posting[2] if len(posting) >= 3 else None
+                loc = add_data[0] if len(add_data) >= 1 else None
+                applicants = self.parse_int(add_data[-1]) if ('applicant' in add_data[-1]) else None
+                salary_low, salary_high = None, None
+                if len(add_data) >= 2:
+                    if (('$' in add_data[1]) and ('K' in add_data[1])):
+                        salary_low = self.parse_int(add_data[1][:(add_data[1].find(' '))])
+                        salary_high = self.parse_int(add_data[1][(add_data[1].find(' ')):])
+                try:
+                    date = soup.find('time').attrs['datetime']
+                except:
+                    date = None
+                data = [uid, title, company, loc, date, applicants, salary_low, salary_high,
+                        str(datetime.today().date())]
+                df = df.append(pd.DataFrame([data], columns=self.job_summary_cols))
         return df
 
     def get_summary_data(self, keyword, location, start=0, append_df=pd.DataFrame(job_summary_cols), save_path=None):
@@ -137,8 +140,9 @@ class LinkedinLogin(LinkedinPublic):
         cnt = len(job_slots) - self._get_count_correction()
         while len(self._get_list_populated()) != cnt:
             for i in range(0, cnt, 3):
-                job_slots[i].location_once_scrolled_into_view
+                self._get_list_skeleton()[i].location_once_scrolled_into_view
             time.sleep(self.sec_per_page)
+            cnt = len(self._get_list_skeleton()) - self._get_count_correction()
         return cnt
 
     def search_filter(self, salary=100, distance=25):

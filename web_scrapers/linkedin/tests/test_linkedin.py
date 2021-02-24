@@ -8,10 +8,10 @@ import json
 
 class TestSourceClient(TestCase):
     keyword = 'data science'
-    location = 'Bakersfield'
-    # source_client = LinkedinPublic
-    source_client = LinkedinLogin
-    uid = '2403641965'
+    location = 'New York, NY'
+    source_client = LinkedinPublic
+    # source_client = LinkedinLogin
+    uid = '2424284044'
     login_required = source_client.login_required
     name, pwd = None, None
     if login_required:
@@ -41,7 +41,7 @@ class TestSourceClient(TestCase):
         data = page.get_detailed_data(self.uid)
         assert isinstance(data, pd.DataFrame)
 
-    def test_online_summary(self):
+    def test_oneline_summary(self):
         page = self.source_client()
         page.load_client(name=self.name, pwd=self.pwd)
         page.job_search(self.keyword, self.location)
