@@ -39,23 +39,22 @@ class LinkedinPublic(SourceClient):
     def get_detailed_data(self, uid, directory='linkedin/data/raw/', reload=True):
         if ((uid + '.txt') not in os.listdir(directory)) or reload:
             self.view_job_posting(uid)
-            ul_list, article = self._get_details(uid)
-            try:
-                salary = self.driver.find_element(By.XPATH, "//div[starts-with(@class, 'salary compensation_')]").text
-            except exceptions.NoSuchElementException:
-                salary = ''
-            sal_low, sal_high = self.parse_salary_range(salary)
-            soup = BeautifulSoup(ul_list)
-            columns = ['uid'] + [li.h3.text for li in soup.find_all('li')] + ['salary_low', 'salary_high']
-            data = [', '.join([el.text for el in soup.contents[i].contents[1:]]) for i in
-                    range(len(soup.find_all('li')))]
-            df = pd.DataFrame([[uid] + data + [sal_low, sal_high]], columns=columns)
-            with open(directory + uid + '.txt', 'w') as file:
-                try:
-                    file.write(article)
-                except UnicodeEncodeError:
-                    pass
-            return df
+            ul_list, article = None, None
+            ul_list, article = self._get_details()
+            if ul_list and article:
+                salary = self._get_salary()
+                sal_low, sal_high = self.parse_salary_range(salary)
+                soup = BeautifulSoup(ul_list)
+                columns = ['uid'] + [li.h3.text for li in soup.find_all('li')] + ['salary_low', 'salary_high']
+                data = [', '.join([el.text for el in soup.contents[i].contents[1:]]) for i in
+                        range(len(soup.find_all('li')))]
+                df = pd.DataFrame([[uid] + data + [sal_low, sal_high]], columns=columns)
+                with open(directory + uid + '.txt', 'w') as file:
+                    try:
+                        file.write(article)
+                    except UnicodeEncodeError:
+                        pass
+                return df
 
     def quit_client(self):
         self.driver.quit()
@@ -116,8 +115,13 @@ class LinkedinPublic(SourceClient):
             try:
                 self.driver.find_element(By.XPATH, "//button[starts-with(@class, 'infinite-scroller')]").click()
             except (exceptions.NoSuchElementException, exceptions.ElementNotInteractableException):
+                pass
+            try:
+                test = self.driver.find_element(By.XPATH, "//div/p[starts-with(@class, 'inline-notification')]").text
+                if "all jobs" in test:
+                    break
+            except (exceptions.NoSuchElementException, exceptions.ElementNotInteractableException):
                 continue
-
         cnt = len(job_list)
         for i in range(0, cnt):
             job = self.driver.find_elements(By.XPATH, "//ul[starts-with(@class, 'jobs-search')]/li[@data-id]")[i]
@@ -155,19 +159,29 @@ class LinkedinPublic(SourceClient):
                     time.sleep(2)
                     return func(*args, **kwargs)
                 except Exception as ex:
-                    print(*args)
-                    inp = input('/n' + ex + '/nPlease check current status...')
-                    return func(*args, **kwargs)
+                    # print(*args)
+                    # test = None
+                    # while test not in ['y','n']:
+                    #     test = input('\n' + str(ex) + '\nPlease check current status.  Retry?  y/n ...\n')
+                    # if test == 'y':
+                    #     return func(*args, **kwargs)
+                    # else:
+                    return None, None
 
         return wrapper
 
     @try_try_ask
-    def _get_details(self, uid):
+    def _get_details(self):
         ul_list = self.driver.find_element(By.XPATH, "//ul[starts-with(@class, 'job-criteria__list')]"). \
             get_attribute('innerHTML')
         article = self.driver.find_element(By.XPATH, "//div[starts-with(@class, 'show-more-less-html')]"). \
             get_attribute('innerHTML')
         return ul_list, article
+
+    @try_try_ask
+    def _get_salary(self):
+        salary = self.driver.find_element(By.XPATH, "//div[starts-with(@class, 'salary compensation_')]").text
+        return salary
 
     @staticmethod
     def parse_int(text: str):

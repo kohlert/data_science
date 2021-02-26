@@ -50,8 +50,10 @@ class DataCollector(object):
             for j in range(len(methods)):
                 search = inputs[i]
                 method = methods[j]
+                df = None
                 df = getattr(client, method.__name__)(*search)
-                dfs[j] = dfs[j].append(df).drop_duplicates()
-                dfs[j].to_csv(self.directory + prefix + method.__name__)
+                if not (df is None):
+                    dfs[j] = dfs[j].append(df).drop_duplicates()
+                    dfs[j].to_csv(self.directory + prefix + method.__name__, index=False)
                 time.sleep(3)
         return dfs
