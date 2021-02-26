@@ -10,7 +10,7 @@ import time
 
 
 class LinkedinLogin(LinkedinPublic):
-    login_required = True
+    login_required = False
     concurrency = 1
     sec_per_page = 1.5
     job_summary_cols = ['uid', 'job_title', 'company', 'location', 'posting_date', 'applicants', 'salary_low',
@@ -18,19 +18,26 @@ class LinkedinLogin(LinkedinPublic):
 
     def __init__(self):
         super().__init__()
+        self.login_required = False
+        warn = input('Warning: attempting too many Linkedin searches (more than several hundred)\n'
+                     'while logged in can cause account restrictions without notice.\n'
+                     'Proceed with login anyway?  [y/n] . . .')
+        if warn == 'y':
+            self.login_required = True
 
     def load_client(self, name=None, pwd=None):
         super().load_client()
         self._login(name, pwd)
 
     def _login(self, name, pwd):
-        name_field = self.driver.find_element(By.NAME, 'session_key')
-        name_field.send_keys(name)
-        password = self.driver.find_element(By.NAME, 'session_password')
-        password.send_keys(pwd)
-        time.sleep(self.sec_per_page)
-        self.driver.find_element(By.CLASS_NAME, 'sign-in-form__submit-button').click()
-        self.security_check('Security checkpoint requires manual login.\nPress enter when complete...')
+        if self.login_required:
+            name_field = self.driver.find_element(By.NAME, 'session_key')
+            name_field.send_keys(name)
+            password = self.driver.find_element(By.NAME, 'session_password')
+            password.send_keys(pwd)
+            time.sleep(self.sec_per_page)
+            self.driver.find_element(By.CLASS_NAME, 'sign-in-form__submit-button').click()
+            self.security_check('Security checkpoint requires manual login.\nPress enter when complete...')
 
     def search_summary(self):
         header = self.driver.find_element(By.CLASS_NAME, 'jobs-search-results-list__title-heading')
