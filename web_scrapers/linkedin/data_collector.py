@@ -10,9 +10,9 @@ class DataCollector(object):
         self.name = name
         self.pwd = pwd
 
-    def summarize_w_config(self, csv_path, columns: list, prefix='', start=0, append=True):
+    def collect_with_csv(self, csv_path, columns: list, prefix='', start=0, append=True):
         """
-        Uses a csv to iterate through inputs and collect a standard set of summary data from a source client.
+        Uses a csv to feed an iterator to 'collect_data' and a standard set of summary operations from a source client.
         :param csv_path: path of csv configuration file
         :param columns: list of column names from csv to use for iterating over
         :param prefix: string for labeling output files
