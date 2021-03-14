@@ -76,7 +76,9 @@ class LinkedinLogin(LinkedinPublic):
                 df = df.append(pd.DataFrame([data], columns=self.job_summary_cols))
         return df
 
-    def get_summary_data(self, keyword, location, start=0, append_df=pd.DataFrame(job_summary_cols), save_path=None):
+    def get_summary_data(self, keyword, city=None, state=None, start=0, append_df=pd.DataFrame(job_summary_cols),
+                         save_path=None):
+        location = city + ', ' + state if (city and state) else (city if city else state)
         self.job_search(keyword, location, start=start)
         j, _ = self.search_summary()
         j = min(j, 1000)

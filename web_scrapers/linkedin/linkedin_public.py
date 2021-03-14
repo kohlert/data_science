@@ -17,7 +17,8 @@ class LinkedinPublic(SourceClient):
     concurrency = 3
     sec_per_page = 1.1
     job_detail_cols = ['uid', 'seniority', 'employment_type', 'job_function', 'industries']
-    job_summary_cols = ['uid', 'job_title', 'company', 'location', 'posting_date', 'search', 'search_date']
+    job_summary_cols = ['uid', 'job_title', 'company', 'location', 'posting_date', 'keyword', 'city', 'state',
+                        'search_date']
 
     def __init__(self):
         super().__init__()
@@ -74,14 +75,15 @@ class LinkedinPublic(SourceClient):
         self.driver.get(path)
         self.security_check()
 
-    def oneline_summary(self, keyword, location):
+    def oneline_summary(self, keyword, city=None, state=None):
         """
         :return: a dataframe with a one-line summary of search results
         """
+        location = city + ', ' + state if (city and state) else (city if city else state)
         self.job_search(keyword, location)
         number, text = self.search_summary()
-        return pd.DataFrame([[number, text, str(datetime.today().date())]],
-                            columns=['results', 'summary_text', 'search_date'])
+        return pd.DataFrame([[number, text, city, state, str(datetime.today().date())]],
+                            columns=['results', 'summary_text', 'city', 'state', 'search_date'])
 
     def search_summary(self):
         res = self.no_results()
@@ -103,7 +105,8 @@ class LinkedinPublic(SourceClient):
         except exceptions.NoSuchElementException:
             return False
 
-    def get_summary_data(self, keyword, location):
+    def get_summary_data(self, keyword, city=None, state=None):
+        location = city + ', ' + state if (city and state) else (city if city else state)
         self.job_search(keyword, location)
         df = pd.DataFrame(columns=self.job_summary_cols)
         res_count, search = self.search_summary()
@@ -138,7 +141,7 @@ class LinkedinPublic(SourceClient):
                     'datetime')
             except exceptions.NoSuchElementException:
                 date = None
-            data = [uid, title, company, loc, date, search, str(datetime.today().date())]
+            data = [uid, title, company, loc, date, keyword, city, state, str(datetime.today().date())]
             df = df.append(pd.DataFrame([data], columns=self.job_summary_cols))
         return df
 

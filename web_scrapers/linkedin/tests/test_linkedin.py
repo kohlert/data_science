@@ -8,7 +8,8 @@ import json
 
 class TestSourceClient(TestCase):
     keyword = 'data science'
-    location = 'New York, NY'
+    state = 'Texas'
+    city = 'Austin'
     source_client = LinkedinPublic
     # source_client = LinkedinLogin
     uid = '2424284044'
@@ -26,24 +27,25 @@ class TestSourceClient(TestCase):
         page = self.source_client()
         page.load_client(name=self.name, pwd=self.pwd)
         assert page.driver.session_id
+        page.quit_client()
 
     def test_get_summary_data(self):
         page = self.source_client()
         page.load_client(name=self.name, pwd=self.pwd)
-        data = page.get_summary_data(self.keyword, self.location)
-        # this just sets up the next test
-        self.uid = data.iloc[1]['uid']
+        data = page.get_summary_data(self.keyword, self.city, self.state)
         assert isinstance(data, pd.DataFrame) and not data['uid'].empty
+        page.quit_client()
 
     def test_get_detailed_data(self):
         page = self.source_client()
         page.load_client(name=self.name, pwd=self.pwd)
         data = page.get_detailed_data(self.uid)
         assert isinstance(data, pd.DataFrame)
+        page.quit_client()
 
     def test_oneline_summary(self):
         page = self.source_client()
         page.load_client(name=self.name, pwd=self.pwd)
-        page.job_search(self.keyword, self.location)
-        df = page.oneline_summary()
+        df = page.oneline_summary(self.keyword, self.city, self.state)
         assert isinstance(df, pd.DataFrame) and not df.empty
+        page.quit_client()
