@@ -6,7 +6,6 @@ from selenium.webdriver.common.by import By
 from functools import wraps
 from datetime import datetime
 import pandas as pd
-import pickle
 import time
 import os
 from .local_drivers import chrome_88_path
@@ -26,6 +25,27 @@ class LinkedinPublic(SourceClient):
         self.driver = None
         # chromedriver.exe is needed.  Current package supports chrome version 88.
         self.chrome_driver_path = chrome_88_path
+
+    def try_try_ask(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except:
+                try:
+                    time.sleep(2)
+                    return func(*args, **kwargs)
+                except Exception as ex:
+                    print(*args)
+                    # test = None
+                    # while test not in ['y','n']:
+                    #     test = input('\n' + str(ex) + '\nPlease check current status.  Retry?  y/n ...\n')
+                    # if test == 'y':
+                    #     return func(*args, **kwargs)
+                    # else:
+                    return None, None
+
+        return wrapper
 
     def load_client(self, name=None, pwd=None):
         try:
@@ -65,26 +85,30 @@ class LinkedinPublic(SourceClient):
         self.driver.get(path)
         self.security_check()
 
-    def job_search(self, keyword, location, start=0, max_sal=True):
-        if max_sal:
+    def job_search(self, keyword, location, start=0, sal_bin=5):
+        if sal_bin:
             path = f"{self.path}jobs/search/?keywords={keyword.replace(' ', '%20')}&location=" \
-                   f"{location.replace(' ', '%20').replace(',', '%2C')}&f_SB2=5&start={str(start)}"
+                   f"{location.replace(' ', '%20').replace(',', '%2C')}&f_SB2={str(sal_bin)}&start={str(start)}"
         else:
             path = f"{self.path}jobs/search/?keywords={keyword.replace(' ', '%20')}&location=" \
                    f"{location.replace(' ', '%20').replace(',', '%2C')}&start={str(start)}"
         self.driver.get(path)
+        if self.retry_check():
+            time.sleep(self.sec_per_page)
+            self.driver.get(path)
         self.security_check()
 
-    def oneline_summary(self, keyword, city=None, state=None):
+    def oneline_summary(self, keyword, city=None, state=None, sal_bin=None):
         """
         :return: a dataframe with a one-line summary of search results
         """
         location = city + ', ' + state if (city and state) else (city if city else state)
-        self.job_search(keyword, location)
+        self.job_search(keyword, location, sal_bin=sal_bin)
         number, text = self.search_summary()
         return pd.DataFrame([[number, text, city, state, str(datetime.today().date())]],
                             columns=['results', 'summary_text', 'city', 'state', 'search_date'])
 
+    @try_try_ask
     def search_summary(self):
         res = self.no_results()
         if res:
@@ -97,13 +121,24 @@ class LinkedinPublic(SourceClient):
             number = self.parse_int(summary_count)
         return number, summary_text
 
-    def no_results(self):
+    def no_results(self, click=True):
         try:
             txt = self.driver.find_element(By.XPATH,
                                            "//div[starts-with(@class, 'results__container')]/section/div/h2").text
-            return txt[17:]
+            txt = txt[17:]
         except exceptions.NoSuchElementException:
-            return False
+            try:
+                txt = self.driver.find_element(By.XPATH,
+                                               "//strong[starts-with(@class, 'no-results__text')]").text
+            except exceptions.NoSuchElementException:
+                txt = False
+        # if txt and click:
+        #     try:
+        #         self.driver.find_element(By.XPATH, "//button[starts-with(@class, 'base-search-bar')]").click()
+        #         txt = self.no_results(click=False)
+        #     except exceptions.NoSuchElementException:
+        #         pass
+        return txt
 
     def get_summary_data(self, keyword, city=None, state=None):
         location = city + ', ' + state if (city and state) else (city if city else state)
@@ -152,26 +187,8 @@ class LinkedinPublic(SourceClient):
             else:
                 wait = input('Please check security checkpoint:')
 
-    def try_try_ask(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except:
-                try:
-                    time.sleep(2)
-                    return func(*args, **kwargs)
-                except Exception as ex:
-                    # print(*args)
-                    # test = None
-                    # while test not in ['y','n']:
-                    #     test = input('\n' + str(ex) + '\nPlease check current status.  Retry?  y/n ...\n')
-                    # if test == 'y':
-                    #     return func(*args, **kwargs)
-                    # else:
-                    return None, None
-
-        return wrapper
+    def retry_check(self):
+        return self.driver.current_url[-9:] == 'cold-join'
 
     @try_try_ask
     def _get_details(self):
@@ -196,10 +213,10 @@ class LinkedinPublic(SourceClient):
     @staticmethod
     def parse_salary_range(salary_range: str):
         salary_low, salary_high = None, None
-        if (('$' in salary_range) and ('K' in salary_range)):
+        if ('$' in salary_range) and ('K' in salary_range):
             salary_low = LinkedinPublic.parse_int(salary_range[:(salary_range.find(' '))]) * 1000
             salary_high = LinkedinPublic.parse_int(salary_range[(salary_range.find(' ')):]) * 1000
-        elif (('$' in salary_range) and ('.00/yr' in salary_range) and ('K' not in salary_range)):
+        elif ('$' in salary_range) and ('.00/yr' in salary_range) and ('K' not in salary_range):
             salary_low = LinkedinPublic.parse_int(salary_range[:(salary_range.find('.00/yr'))])
             salary_high = LinkedinPublic.parse_int(salary_range[(salary_range.find('.00/yr') + 6):-6])
         return salary_low, salary_high

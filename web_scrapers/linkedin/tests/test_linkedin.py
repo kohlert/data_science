@@ -7,7 +7,7 @@ import json
 
 
 class TestSourceClient(TestCase):
-    keyword = 'data science'
+    keyword = 'data science lead'
     state = 'Texas'
     city = 'Austin'
     source_client = LinkedinPublic
@@ -30,6 +30,9 @@ class TestSourceClient(TestCase):
         page.quit_client()
 
     def test_get_summary_data(self):
+        """
+        Gets all summary data for results of a specific source_client search
+        """
         page = self.source_client()
         page.load_client(name=self.name, pwd=self.pwd)
         data = page.get_summary_data(self.keyword, self.city, self.state)
@@ -37,6 +40,9 @@ class TestSourceClient(TestCase):
         page.quit_client()
 
     def test_get_detailed_data(self):
+        """
+        Gets details for a specific uid
+        """
         page = self.source_client()
         page.load_client(name=self.name, pwd=self.pwd)
         data = page.get_detailed_data(self.uid)
@@ -44,6 +50,9 @@ class TestSourceClient(TestCase):
         page.quit_client()
 
     def test_oneline_summary(self):
+        """
+        Gets oneline summary of search results.
+        """
         page = self.source_client()
         page.load_client(name=self.name, pwd=self.pwd)
         df = page.oneline_summary(self.keyword, self.city, self.state)

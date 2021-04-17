@@ -17,14 +17,14 @@ class TestDataCollector(TestCase):
 
     def test_collect_data(self):
         methods = [LinkedinPublic.get_detailed_data]
-        df = pd.read_csv('linkedin/data/dad_smid_get_summary_data')
+        df = pd.read_csv('linkedin/data/DataScienceLead_smax_get_summary_data')
         searches = [[str(id)] for id in df.loc[:, 'uid']]
-        dfs = self.collector.collect_data(methods, searches, prefix='dad_smid_', start=0)
+        dfs = self.collector.collect_data(methods, searches, prefix='DataScienceLead_smax_', start=0)
         assert all(isinstance(dfs[i], pd.DataFrame) for i in range(len(methods)))
 
     def test_collect_with_csv(self):
         path = 'linkedin/data/locations.csv'
-        columns = ['data analytics developer', 'City', 'State']
-        prefix = 'dad_smid_'
+        columns = ['data science lead', 'City', 'State']
+        prefix = 'DataScienceLead_smax_'
         dfs = self.collector.collect_with_csv(path, columns, prefix=prefix, start=0)
         assert all(isinstance(dfs[i], pd.DataFrame) for i in range(len(dfs)))

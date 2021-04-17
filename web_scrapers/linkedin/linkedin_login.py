@@ -153,6 +153,3 @@ class LinkedinLogin(LinkedinPublic):
             time.sleep(self.sec_per_page)
             cnt = len(self._get_list_skeleton()) - self._get_count_correction()
         return cnt
-
-    def search_filter(self, salary=100, distance=25):
-        pass
