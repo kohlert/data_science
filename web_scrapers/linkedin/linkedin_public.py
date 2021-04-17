@@ -25,6 +25,7 @@ class LinkedinPublic(SourceClient):
         self.driver = None
         # chromedriver.exe is needed.  Current package supports chrome version 88.
         self.chrome_driver_path = chrome_88_path
+        self.sal_bin = None
 
     def try_try_ask(func):
         @wraps(func)
@@ -85,7 +86,8 @@ class LinkedinPublic(SourceClient):
         self.driver.get(path)
         self.security_check()
 
-    def job_search(self, keyword, location, start=0, sal_bin=5):
+    def job_search(self, keyword, location, start=0):
+        sal_bin = self.sal_bin
         if sal_bin:
             path = f"{self.path}jobs/search/?keywords={keyword.replace(' ', '%20')}&location=" \
                    f"{location.replace(' ', '%20').replace(',', '%2C')}&f_SB2={str(sal_bin)}&start={str(start)}"
@@ -98,12 +100,12 @@ class LinkedinPublic(SourceClient):
             self.driver.get(path)
         self.security_check()
 
-    def oneline_summary(self, keyword, city=None, state=None, sal_bin=None):
+    def oneline_summary(self, keyword, city=None, state=None):
         """
         :return: a dataframe with a one-line summary of search results
         """
         location = city + ', ' + state if (city and state) else (city if city else state)
-        self.job_search(keyword, location, sal_bin=sal_bin)
+        self.job_search(keyword, location)
         number, text = self.search_summary()
         return pd.DataFrame([[number, text, city, state, str(datetime.today().date())]],
                             columns=['results', 'summary_text', 'city', 'state', 'search_date'])

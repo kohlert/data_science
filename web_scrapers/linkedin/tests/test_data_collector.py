@@ -25,6 +25,6 @@ class TestDataCollector(TestCase):
     def test_collect_with_csv(self):
         path = 'linkedin/data/locations.csv'
         columns = ['data science lead', 'City', 'State']
-        prefix = 'DataScienceLead_smax_'
+        prefix = 'DataScienceLead_all_'
         dfs = self.collector.collect_with_csv(path, columns, prefix=prefix, start=0)
         assert all(isinstance(dfs[i], pd.DataFrame) for i in range(len(dfs)))
