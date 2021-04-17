@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-import sklearn as skl
+from sklearn.feature_extraction.text import TfidfVectorizer
 import pandas as pd
 
 
@@ -12,12 +12,23 @@ class LinkedinScrubber(object):
             text = file.read()
         if text:
             soup = BeautifulSoup(text)
-            return [uid, [st for st in soup.stripped_strings]]
+            strings = [st for st in soup.stripped_strings]
+            return strings
 
     def build_dataframe(self, uids: list):
         df = pd.DataFrame(columns=['uid', 'strings'])
         for uid in uids:
             st_vector = self.parse_html(uid)
             if st_vector:
-                df = df.append(pd.DataFrame(data=[st_vector], columns=['uid', 'strings']))
+                df = df.append(pd.DataFrame(data=[[uid, st_vector]], columns=['uid', 'strings']))
         return df
+
+    def build_matrix(self, uids: list):
+        data_list = []
+        for uid in uids:
+            st_vector = ' '.join(self.parse_html(uid))
+            if st_vector:
+                data_list.append(st_vector)
+        vectorizer = TfidfVectorizer()
+        matrix = vectorizer.fit_transform(data_list)
+        return matrix, vectorizer

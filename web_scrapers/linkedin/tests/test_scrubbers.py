@@ -22,3 +22,9 @@ class TestLinkedinScrubber(TestCase):
         uids = [file[:-4] for file in os.listdir(self.directory)]
         test = LinkedinScrubber().build_dataframe(uids)
         assert isinstance(test, pd.DataFrame)
+
+    def test_build_matrix(self):
+        prefix = 'all_data'
+        uids = [file[:-4] for file in os.listdir(self.directory)]
+        test, vect = LinkedinScrubber().build_matrix(uids)
+        test.to_csv(self.directory + prefix, index=False)
