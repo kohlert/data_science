@@ -8,7 +8,7 @@ import json
 
 
 class TestDataCollector(TestCase):
-    client = LinkedinPublic(reload=False, sal_bin=3)
+    client = LinkedinPublic(reload=False, sal_bin=4)
     name, pwd = None, None
     if client.login_required:
         with open(os.environ['cred'] + 'linkedin.json', 'r') as doc:
@@ -25,6 +25,6 @@ class TestDataCollector(TestCase):
     def test_collect_with_csv(self):
         path = 'linkedin/data/locations.csv'
         columns = ['data science lead', 'City', 'State']
-        prefix = 'DataScienceLead_all_'
+        prefix = 'DataScienceLead_'
         dfs = self.collector.collect_with_csv(path, columns, prefix=prefix, start=0)
         assert all(isinstance(dfs[i], pd.DataFrame) for i in range(len(dfs)))

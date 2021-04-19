@@ -17,7 +17,7 @@ class LinkedinPublic(SourceClient):
     sec_per_page = 1.1
     job_detail_cols = ['uid', 'seniority', 'employment_type', 'job_function', 'industries']
     job_summary_cols = ['uid', 'job_title', 'company', 'location', 'posting_date', 'keyword', 'city', 'state',
-                        'search_date']
+                        'search_date', 'sal_bin']
 
     def __init__(self, reload=False, sal_bin=None):
         super().__init__()
@@ -39,13 +39,13 @@ class LinkedinPublic(SourceClient):
                     return func(*args, **kwargs)
                 except Exception as ex:
                     print(*args)
-                    # test = None
-                    # while test not in ['y','n']:
-                    #     test = input('\n' + str(ex) + '\nPlease check current status.  Retry?  y/n ...\n')
-                    # if test == 'y':
-                    #     return func(*args, **kwargs)
-                    # else:
-                    return None, None
+                    test = None
+                    while test not in ['y', 'n']:
+                        test = input('\n' + str(ex) + '\nPlease check current status.  Retry?  y/n ...\n')
+                    if test == 'y':
+                        return func(*args, **kwargs)
+                    else:
+                        return None, None
 
         return wrapper
 
@@ -113,10 +113,10 @@ class LinkedinPublic(SourceClient):
         location = city + ', ' + state if (city and state) else (city if city else state)
         self.job_search(keyword, location)
         number, text = self.search_summary()
-        return pd.DataFrame([[number, text, city, state, str(datetime.today().date())]],
-                            columns=['results', 'summary_text', 'city', 'state', 'search_date'])
+        return pd.DataFrame([[number, text, city, state, str(datetime.today().date())], self.sal_bin],
+                            columns=['results', 'summary_text', 'city', 'state', 'search_date', 'sal_bin'])
 
-    @try_try_ask
+    # @try_try_ask
     def search_summary(self):
         res = self.no_results()
         if res:
@@ -184,7 +184,7 @@ class LinkedinPublic(SourceClient):
                     'datetime')
             except exceptions.NoSuchElementException:
                 date = None
-            data = [uid, title, company, loc, date, keyword, city, state, str(datetime.today().date())]
+            data = [uid, title, company, loc, date, keyword, city, state, str(datetime.today().date()), self.sal_bin]
             df = df.append(pd.DataFrame([data], columns=self.job_summary_cols))
         return df
 
