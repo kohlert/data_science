@@ -19,13 +19,14 @@ class LinkedinPublic(SourceClient):
     job_summary_cols = ['uid', 'job_title', 'company', 'location', 'posting_date', 'keyword', 'city', 'state',
                         'search_date']
 
-    def __init__(self):
+    def __init__(self, reload=False, sal_bin=None):
         super().__init__()
         self.path = 'https://www.linkedin.com/'
         self.driver = None
         # chromedriver.exe is needed.  Current package supports chrome version 88.
         self.chrome_driver_path = chrome_88_path
-        self.sal_bin = None
+        self.sal_bin = sal_bin
+        self.reload = reload
 
     def try_try_ask(func):
         @wraps(func)
@@ -58,10 +59,12 @@ class LinkedinPublic(SourceClient):
         except exceptions.SessionNotCreatedException:
             self.driver.quit()
 
-    def get_detailed_data(self, uid, directory='linkedin/data/raw/', reload=True):
-        if ((uid + '.txt') not in os.listdir(directory)) or reload:
+    def get_detailed_data(self, uid, directory='linkedin/data/raw/'):
+        df = pd.DataFrame()
+        if ((uid + '.txt') not in os.listdir(directory)) or self.reload:
             self.view_job_posting(uid)
             ul_list, article = None, None
+            print(f'getting {uid}')
             ul_list, article = self._get_details()
             if ul_list and article:
                 salary = self._get_salary()
@@ -76,7 +79,7 @@ class LinkedinPublic(SourceClient):
                         file.write(article)
                     except UnicodeEncodeError:
                         pass
-                return df
+        return df
 
     def quit_client(self):
         self.driver.quit()
@@ -84,6 +87,9 @@ class LinkedinPublic(SourceClient):
     def view_job_posting(self, uid):
         path = f'{self.path}/jobs/view/{uid}'
         self.driver.get(path)
+        if self.retry_check():
+            time.sleep(self.sec_per_page)
+            self.driver.get(path)
         self.security_check()
 
     def job_search(self, keyword, location, start=0):

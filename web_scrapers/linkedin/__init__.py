@@ -1,2 +1,2 @@
-from linkedin.linkedin_public import LinkedinPublic
-from linkedin.linkedin_login import LinkedinLogin
+from .linkedin_public import LinkedinPublic
+from .linkedin_login import LinkedinLogin

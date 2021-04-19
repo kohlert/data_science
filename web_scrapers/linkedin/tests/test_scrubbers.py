@@ -26,5 +26,5 @@ class TestLinkedinScrubber(TestCase):
     def test_build_matrix(self):
         prefix = 'all_data'
         uids = [file[:-4] for file in os.listdir(self.directory)]
-        test, vect = LinkedinScrubber().build_matrix(uids)
-        test.to_csv(self.directory + prefix, index=False)
+        uids, matrix, vectorizer = LinkedinScrubber().build_matrix(uids)
+        matrix.to_csv(self.directory + prefix, index=False)

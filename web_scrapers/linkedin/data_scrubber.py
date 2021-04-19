@@ -24,11 +24,11 @@ class LinkedinScrubber(object):
         return df
 
     def build_matrix(self, uids: list):
+        df = self.build_dataframe(uids)
         data_list = []
-        for uid in uids:
-            st_vector = ' '.join(self.parse_html(uid))
-            if st_vector:
-                data_list.append(st_vector)
+        for idx, data in df.iterrows():
+            st_vector = ' '.join(data['strings'])
+            data_list.append(st_vector)
         vectorizer = TfidfVectorizer()
         matrix = vectorizer.fit_transform(data_list)
-        return matrix, vectorizer
+        return df['uid'], matrix, vectorizer

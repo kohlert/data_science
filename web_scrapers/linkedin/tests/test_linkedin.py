@@ -8,8 +8,8 @@ import json
 
 class TestSourceClient(TestCase):
     keyword = 'data science lead'
-    state = 'Texas'
-    city = 'Austin'
+    state = 'Jacksonville'
+    city = 'Florida'
     source_client = LinkedinPublic
     # source_client = LinkedinLogin
     uid = '2424284044'

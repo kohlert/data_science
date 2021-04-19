@@ -1,11 +1,13 @@
 import time
+from inspect import isclass
 import pickle
 import pandas as pd
 
 
 class DataCollector(object):
     def __init__(self, source_client, directory='linkedin/data/', name=None, pwd=None):
-        self.client = source_client
+        self.client = source_client() if isclass(source_client) else source_client
+        self.client_class = source_client if isclass(source_client) else source_client.__class__
         self.directory = directory
         self.name = name
         self.pwd = pwd
@@ -22,13 +24,13 @@ class DataCollector(object):
         """
         searches = pd.read_csv(csv_path)
         searches = searches.loc[start:, columns].values.tolist()
-        methods = [self.client.oneline_summary, self.client.get_summary_data]
+        methods = [self.client_class.oneline_summary, self.client_class.get_summary_data]
         dfs = self.collect_data(methods, searches, prefix=prefix, append=append, start=start)
         return dfs
 
     def collect_data(self, methods: list, inputs: list, prefix='', start=0, append=True):
         """
-        Iterates over each set of inputs in 'iterators' for each method in 'methods'.  Backups are also saved.
+        Iterates over each set of inputs in for each set of methods.  Backups are also saved.
         :param methods: list of methods to be called on the data source client
         :param inputs: list of inputs to be passed to the methods being called
         :param prefix: (optional) a string for labeling output files
@@ -36,7 +38,7 @@ class DataCollector(object):
         :param append: boolean if existing data in csv_path should be appended or overwritten
         :return: a list of dataframes, one for each method
         """
-        client = self.client()
+        client = self.client
         client.load_client(name=self.name, pwd=self.pwd)
         inputs = inputs[start:]
         dfs = [getattr(client, method.__name__)(*inputs[0]) for method in methods]
