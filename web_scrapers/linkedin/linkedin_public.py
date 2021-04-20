@@ -13,7 +13,7 @@ from .local_drivers import chrome_88_path
 
 class LinkedinPublic(SourceClient):
     login_required = False
-    concurrency = 3
+    concurrency = 1
     sec_per_page = 1.1
     job_detail_cols = ['uid', 'seniority', 'employment_type', 'job_function', 'industries']
     job_summary_cols = ['uid', 'job_title', 'company', 'location', 'posting_date', 'keyword', 'city', 'state',
@@ -113,10 +113,9 @@ class LinkedinPublic(SourceClient):
         location = city + ', ' + state if (city and state) else (city if city else state)
         self.job_search(keyword, location)
         number, text = self.search_summary()
-        return pd.DataFrame([[number, text, city, state, str(datetime.today().date())], self.sal_bin],
+        return pd.DataFrame([[number, text, city, state, str(datetime.today().date()), self.sal_bin]],
                             columns=['results', 'summary_text', 'city', 'state', 'search_date', 'sal_bin'])
 
-    # @try_try_ask
     def search_summary(self):
         res = self.no_results()
         if res:

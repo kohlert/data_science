@@ -25,7 +25,7 @@ class DataCollector(object):
         searches = pd.read_csv(csv_path)
         searches = searches.loc[start:, columns].values.tolist()
         methods = [self.client_class.oneline_summary, self.client_class.get_summary_data]
-        dfs = self.collect_data(methods, searches, prefix=prefix, append=append, start=start)
+        dfs = self.collect_data(methods, searches, prefix=prefix, append=append, start=0)
         return dfs
 
     def collect_data(self, methods: list, inputs: list, prefix='', start=0, append=True):
