@@ -8,7 +8,7 @@ import json
 
 
 class TestDataCollector(TestCase):
-    client = LinkedinPublic(reload=False, sal_bin=2)
+    client = LinkedinPublic(reload=False, sal_bin=4)
     name, pwd = None, None
     if client.login_required:
         with open(os.environ['cred'] + 'linkedin.json', 'r') as doc:
@@ -17,14 +17,14 @@ class TestDataCollector(TestCase):
 
     def test_collect_data(self):
         methods = [LinkedinPublic.get_detailed_data]
-        df = pd.read_csv('linkedin/data/DataScienceLead_smax_get_summary_data')
+        df = pd.read_csv('linkedin/data/unique_datasciencelead_combined_list.csv')
         searches = [[str(id)] for id in list(set(df.loc[:, 'uid']))]
-        dfs = self.collector.collect_data(methods, searches, prefix='DataScienceLead_all_', start=0)
+        dfs = self.collector.collect_data(methods, searches, prefix='master_', start=0)
         assert all(isinstance(dfs[i], pd.DataFrame) for i in range(len(methods)))
 
     def test_collect_with_csv(self):
         path = 'linkedin/data/locations.csv'
-        columns = ['data science lead', 'City', 'State']
-        prefix = 'DataScienceLead_'
-        dfs = self.collector.collect_with_csv(path, columns, prefix=prefix, start=269)
+        columns = ['data science', 'City', 'State']
+        prefix = 'new_'
+        dfs = self.collector.collect_with_csv(path, columns, prefix=prefix, start=0)
         assert all(isinstance(dfs[i], pd.DataFrame) for i in range(len(dfs)))

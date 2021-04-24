@@ -24,7 +24,7 @@ class LinkedinPublic(SourceClient):
         self.path = 'https://www.linkedin.com/'
         self.driver = None
         # chromedriver.exe is needed.  Current package supports chrome version 88.
-        self.chrome_driver_path = chrome_88_path
+        self.chrome_driver_path = chrome_90_path
         self.sal_bin = sal_bin
         self.reload = reload
 
@@ -116,6 +116,7 @@ class LinkedinPublic(SourceClient):
         return pd.DataFrame([[number, text, city, state, str(datetime.today().date()), self.sal_bin]],
                             columns=['results', 'summary_text', 'city', 'state', 'search_date', 'sal_bin'])
 
+    @try_try_ask
     def search_summary(self):
         res = self.no_results()
         if res:

@@ -1,6 +1,7 @@
 import time
 from inspect import isclass
 import pickle
+from tqdm import tqdm
 import pandas as pd
 
 
@@ -48,7 +49,7 @@ class DataCollector(object):
                     dfs[i] = dfs[i].append(pd.read_csv(self.directory + prefix + methods[i].__name__)).drop_duplicates()
                 except FileNotFoundError:
                     continue
-        for i in range(1, len(inputs)):
+        for i in tqdm(range(1, len(inputs))):
             for j in range(len(methods)):
                 search = inputs[i]
                 method = methods[j]
