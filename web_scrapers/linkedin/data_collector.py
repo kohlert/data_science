@@ -10,6 +10,7 @@ class DataCollector(object):
         self.client = source_client() if isclass(source_client) else source_client
         self.client_class = source_client if isclass(source_client) else source_client.__class__
         self.directory = directory
+        self.wait_time = self.client.wait_time if hasattr(self.client, 'wait_time') else 0.5
         self.name = name
         self.pwd = pwd
 
@@ -58,5 +59,5 @@ class DataCollector(object):
                 if not (df is None):
                     dfs[j] = dfs[j].append(df).drop_duplicates()
                     dfs[j].to_csv(self.directory + prefix + method.__name__, index=False)
-                time.sleep(3)
+                time.sleep(self.wait_time)
         return dfs

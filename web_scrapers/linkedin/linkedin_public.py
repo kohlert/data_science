@@ -8,13 +8,13 @@ from datetime import datetime
 import pandas as pd
 import time
 import os
-from .local_drivers import chrome_88_path
+from .local_drivers import chrome_90_path
 
 
 class LinkedinPublic(SourceClient):
     login_required = False
     concurrency = 1
-    sec_per_page = 1.1
+    wait_time = 0.1
     job_detail_cols = ['uid', 'seniority', 'employment_type', 'job_function', 'industries']
     job_summary_cols = ['uid', 'job_title', 'company', 'location', 'posting_date', 'keyword', 'city', 'state',
                         'search_date', 'sal_bin']
@@ -38,10 +38,10 @@ class LinkedinPublic(SourceClient):
                     time.sleep(2)
                     return func(*args, **kwargs)
                 except Exception as ex:
-                    print(*args)
+                    # print(*args)
                     test = None
-                    while test not in ['y', 'n']:
-                        test = input('\n' + str(ex) + '\nPlease check current status.  Retry?  y/n ...\n')
+                    # while test not in ['y', 'n']:
+                    #     test = input('\n' + str(ex) + '\nPlease check current status.  Retry?  y/n ...\n')
                     if test == 'y':
                         return func(*args, **kwargs)
                     else:
@@ -88,7 +88,7 @@ class LinkedinPublic(SourceClient):
         path = f'{self.path}/jobs/view/{uid}'
         self.driver.get(path)
         if self.retry_check():
-            time.sleep(self.sec_per_page)
+            time.sleep(self.wait_time)
             self.driver.get(path)
         self.security_check()
 
@@ -102,7 +102,7 @@ class LinkedinPublic(SourceClient):
                    f"{location.replace(' ', '%20').replace(',', '%2C')}&start={str(start)}"
         self.driver.get(path)
         if self.retry_check():
-            time.sleep(self.sec_per_page)
+            time.sleep(self.wait_time)
             self.driver.get(path)
         self.security_check()
 
@@ -157,7 +157,7 @@ class LinkedinPublic(SourceClient):
         for i in range(0, res_count, 10):
             job_list[-1].location_once_scrolled_into_view  # scrolls through items to ensure all data is loaded
             job_list = self.driver.find_elements(By.XPATH, "//ul[starts-with(@class, 'jobs-search')]/li[@data-id]")
-            time.sleep(self.sec_per_page)
+            time.sleep(self.wait_time)
             try:
                 self.driver.find_element(By.XPATH, "//button[starts-with(@class, 'infinite-scroller')]").click()
             except (exceptions.NoSuchElementException, exceptions.ElementNotInteractableException):

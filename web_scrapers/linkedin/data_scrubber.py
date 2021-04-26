@@ -8,6 +8,7 @@ class LinkedinScrubber(object):
         self.directory = directory
 
     def parse_html(self, uid):
+        uid = str(uid)
         with open(self.directory + uid + '.txt', 'r') as file:
             text = file.read()
         if text:

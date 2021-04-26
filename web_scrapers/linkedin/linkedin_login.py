@@ -12,7 +12,7 @@ import time
 class LinkedinLogin(LinkedinPublic):
     login_required = False
     concurrency = 1
-    sec_per_page = 1.5
+    wait_time = 1.5
     job_summary_cols = ['uid', 'job_title', 'company', 'location', 'posting_date', 'applicants', 'salary_low',
                         'salary_high', 'search_date']
 

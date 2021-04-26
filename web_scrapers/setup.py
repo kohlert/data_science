@@ -8,6 +8,6 @@ setup(
     license='MIT',
     keywords='webscraper job search linkedin selenium',
     url='https://github.com/kohlert/data_science/tree/master/Web_Scrapers/linkedin',
-    packages=['linkedin'],
+    packages=['linkedin', 'linkedin.local_drivers'],
     install_requires=['selenium', 'pandas'],
 )

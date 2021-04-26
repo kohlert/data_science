@@ -19,7 +19,7 @@ class TestDataCollector(TestCase):
         methods = [LinkedinPublic.get_detailed_data]
         df = pd.read_csv('linkedin/data/unique_datasciencelead_combined_list.csv')
         searches = [[str(id)] for id in list(set(df.loc[:, 'uid']))]
-        dfs = self.collector.collect_data(methods, searches, prefix='master_', start=0)
+        dfs = self.collector.collect_data(methods, searches, prefix='master_', start=(2446 + 2980 + 42600))
         assert all(isinstance(dfs[i], pd.DataFrame) for i in range(len(methods)))
 
     def test_collect_with_csv(self):
