@@ -155,10 +155,12 @@ class AlphaClient(object):
             data = False
         alpha_url = self.build_url(ticker, full=full_hist)
         df = self.throttled_call(alpha_url)
+        if df.empty:
+            raise FileNotFoundError('No Dataframe returned.')
         if "Error Message" in df.iloc[0, 0]:
-            print(df)
+            print(df.iloc[0, 0])
         elif "Thank you for using Alpha Vantage!" in df.iloc[0, 0]:
-            print(df)
+            print(df.iloc[0, 0])
             now = dt.datetime.now()
             for i in filter(lambda x: x < now, self.last500):
                 self.last500[self.last500.index(i)] = now
@@ -170,9 +172,9 @@ class AlphaClient(object):
                 df.to_csv(filepath, index=False)
             else:
                 portal = DataPortal()
-                portal.update(df, 'daily_prices', 'default', uid=ticker)
+                portal.update(df, 'daily_prices', 'default', uid=ticker, method='append')
 
 
 if __name__ == '__main__':
     ac = AlphaClient()
-    ac.update_stock_list()
+    ac.update_stock_list(start_point='ELOX')
